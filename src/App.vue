@@ -1,17 +1,17 @@
 <template>
   <div id="app">
-    
-    <tipo-gasto></tipo-gasto>
+
+    <tab-controle-gasto></tab-controle-gasto>
   </div>
 </template>
 
 <script>
-import TipoGasto from './components/TipoGasto'
+import TabControleGasto from './components/TabControleGasto';
 
 export default {
   name: 'app',
   components: {
-    'tipo-gasto': TipoGasto
+    'tab-controle-gasto': TabControleGasto,
   }
 }
 </script>
@@ -23,6 +23,6 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  margin-top: 5px;
 }
 </style>

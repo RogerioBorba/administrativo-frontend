@@ -3,7 +3,7 @@
   <v-layout row>
     <v-flex xs12 sm6 offset-sm3>
       <v-card>
-        <v-toolbar class="white--text indigo" dark>
+        <v-toolbar class="indigo text--lighten-2" dark>
           <v-btn icon @click="plusClicked">
              <v-icon >add</v-icon>
           </v-btn>
@@ -105,7 +105,7 @@ export default {
       },
     },
     created: function () {
-      axios.defaults.baseURL = 'http://127.0.0.1:8000/controle-list/';
+      axios.defaults.baseURL = 'http://127.0.0.1:8000/controle/';
       axios.defaults.headers.common['Accept'] = 'application/json';
       axios.defaults.headers.post['Content-Type'] = 'application/json';
       this.url = "tipo-gasto-list/";
@@ -122,4 +122,5 @@ export default {
 }
 </script>
 <style scoped>
+color: black
 </style>
