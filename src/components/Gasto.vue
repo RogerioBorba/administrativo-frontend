@@ -13,12 +13,14 @@
             <v-icon>more_vert</v-icon>
           </v-btn>
         </v-toolbar>
-        <v-form v-model="valid" v-if="showCreateNewItem">
-         <v-text-field  label="nome" v-model="name" :rules="nameRules"  :counter="10"  required  ></v-text-field>
-         <v-text-field label="E-mail" v-model="email" :rules="emailRules" required ></v-text-field>
-         <v-btn @click="submit">submit</v-btn>
-         <v-btn @click="clear">clear</v-btn>
-       </v-form>
+        <form  v-if="showCreateOrUpdateItem">
+           <v-select label="Tipo de Gasto" v-model="tipo_gasto" :items="tipo_gasto_list" item-text="nome" required></v-select>
+           <v-text-field label="Data" v-model="data"  required ></v-text-field>
+           <v-text-field label="Valor" v-model="valor"  required ></v-text-field>
+           <v-text-field label="Detalhe" v-model="detalhe"  required ></v-text-field>
+           <v-btn @click="submit">submit</v-btn>
+           <v-btn @click="cancel">Cancel</v-btn>
+       </form>
         <v-data-table v-model="selected" v-bind:headers="headers" v-bind:items="items"  select-all v-bind:pagination.sync="pagination" selected-key="name" class="elevation-1">
           <template slot="headers" scope="props">
             <tr>
@@ -35,6 +37,16 @@
             <tr :active="props.selected" @click="props.selected = !props.selected">
               <td>
                 <v-checkbox primary  hide-details :input-value="props.selected"></v-checkbox>
+              </td>
+              <td>
+                <v-btn  purple lighten-4 icon @click.native="removeItem(props.item);">
+                   <v-icon dark> delete </v-icon>
+                </v-btn>
+              </td>
+              <td>
+                <v-btn  purple lighten-4 icon @click.native="editItem(props.item)" >
+                   <v-icon dark> edit </v-icon>
+                </v-btn>
               </td>
               <td class="text-xs-right">{{ props.item.tipo_gasto }}</td>
               <td class="text-xs-right">{{ props.item.data }}</td>
@@ -57,14 +69,19 @@
          sortBy: 'valor'
        },
        selected: [],
-       showCreateNewItem: false,
+       showCreateOrUpdateItem: false,
+       data: '',
+       valor: '',
+       detalhe: '',
+       tipo_gasto: '',
+       actualItem: {},
         headers: [
-
+          { text: 'Excluir', value: 'excluir'},
+          { text: 'Editar', value: 'editar'},
           { text: 'Tipo de gasto', value: 'tipo_de_gasto'},
           { text: 'Data', value: 'data' },
           { text: 'Valor', value: 'valor' },
           { text: 'Usuário', value: 'usuario' },
-
         ],
         items: [],
       }
@@ -86,55 +103,86 @@
         return parseInt(an_url.split('/').reverse()[0]);
       },
       plusClicked() {
-        this.showCreateNewItem = true;
-        this.modeLabel = 'Pressione enter para incluir um novo item';
+        this.showCreateOrUpdateItem = true;
+
       },
-      updateOrCreateItem() {
-        if (this.actualItem.id == null)
-          return this.newItem();
-        this.actualItem.nome = this.nome;
-        axios.put(this.url + this.actualItem.id + "/", this.actualItem).then( response => {
-            if (response.status == 204)
-                this.nome = '';
-        })
-        .catch(error => {
-          console.log(error);
-        });
+      clearFields() {
+        this.tipo_gasto = null;
+        this.valor = '';
+        this.data = '';
+        this.detalhe = '';
+      },
+      populateFields() {
+        this.tipo_gasto = this.actualItem.tipo_gasto
+        this.valor = this.actualItem.valor;
+        this.data = this.actualItem.data;
+        this.detalhe = this.actualItem.detalhe;
+      },
+      populateItem() {
+        this.actualItem.tipo_gasto = this.tipo_gasto.id;
+        this.actualItem.valor = this.valor;
+        this.actualItem.data = this.data;
+        this.actualItem.detalhe = this.detalhe;
+      },
+      updateOrNewItem() {
+        if (this.actualItem.id != null)
+          return this.updateItem();
+        this.newItem();
      },
       newItem() {
-        if (this.nome == '')
-          return;
-        this.actualItem.nome = this.nome;
+        this.actualItem = {};
+        this.populateItem();
         axios.post(this.url, this.actualItem).then( response => {
             if (response.status == 201) {
-              let i = {};
-              i.id = this.idFromUrl(response.headers['content-location']);
-              i.nome = this.nome;
-              this.items.push(i);
-              this.nome = '';
+              this.actualItem.id = this.idFromUrl(response.headers['content-location']);
+              this.items.push(this.actualItem);
+              this.clearFields();
+              this.actualItem = {};
             }
           })
         .catch(error => {
           console.log(error);
         });
       },
-
-      editItem(item) {
-          this.modeLabel = 'Ao finalizar a edição, pressione enter para registrar a alteração';
-          this.actualItem = item;
-          this.nome = item.nome;
-      },
-      removeItem(item) {
-        let index = this.items.indexOf(item);
-        axios.delete(this.url + item.id + "/").then( response => {
-
+      updateItem() {
+        this.tipo_gasto = this.actualItem.tipo_gasto;
+        this.populateItem();
+        axios.put(this.url + this.actualItem.id + "/", this.actualItem).then( response => {
+            if (response.status == 204)
+                this.clearFields();
         })
         .catch(error => {
           console.log(error);
         });
-        if (index > -1) {
-          this.items.splice(index, 1);
-        }
+      },
+      editItem(item) {
+          this.actualItem = item;
+          this.populateFields();
+          this.showCreateOrUpdateItem = true;
+      },
+      removeItem(item) {
+        let index = this.items.indexOf(item);
+        axios.delete(this.url + item.id + "/").then( response => {
+            console.log('deleted: '+ index);
+            if (index > -1)
+              this.items.splice(index, 1);
+        })
+        .catch(error => {
+          console.log(error);
+        });
+      },
+      submit() {
+        this.updateOrNewItem();
+      },
+      cancel() {
+        this.actualItem = {};
+        this.showCreateOrUpdateItem = false;
+      },
+      getAllGastos() {
+        return axios.get("gasto-list/");
+      },
+      getAllTipoGasto() {
+        return axios.get("tipo-gasto-list/");
       },
     },
     created: function () {
@@ -142,14 +190,15 @@
       axios.defaults.headers.common['Accept'] = 'application/json';
       axios.defaults.headers.post['Content-Type'] = 'application/json';
       this.url = "gasto-list/";
-      this.dialog= false;
-      this.modeLabel = 'Digite e pressione enter para incluir um novo item';
-      axios.get(this.url).then(response => {
-              this.items = response.data;
-      })
-      .catch(error => {
-        console.log(error);
-      });
+      this.actualItem = {};
+      axios.all([this.getAllGastos(), this.getAllTipoGasto()])
+        .then(axios.spread((response_gastos, response_tipos)=> {
+          this.items = response_gastos.data;
+          this.tipo_gasto_list = response_tipos.data;
+        }))
+        .catch(error => {
+          console.log(error);
+        })
     }
   }
 </script>
