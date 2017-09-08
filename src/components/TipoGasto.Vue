@@ -14,7 +14,13 @@
             <v-icon>more_vert</v-icon>
           </v-btn>
         </v-toolbar>
-        <v-text-field  :label="modeLabel" v-model="nome" @keyup.enter="updateOrCreateItem"></v-text-field>
+
+        <form  v-if="showCreateOrUpdateItem">
+           <v-text-field  label="Nome" v-model="actualItem.nome" ></v-text-field>
+           <v-select label="Tipo de Gasto Genérico" v-model="actualItem.tipo_gasto_generico_object" :items="tipo_gasto_list" item-text="nome" ></v-select>
+           <v-btn @click="updateOrCreateItem">submit</v-btn>
+           <v-btn @click="cancel">Cancel</v-btn>
+       </form>
         <v-list >
           <v-list-tile avatar v-for="(item, index) in items" :key="index" @click="" v-bind:value="item">
             <v-btn  purple lighten-4 icon @click.native="removeItem(item);">
@@ -40,56 +46,100 @@ export default {
   data () {
       return {
         url: 'tipo-gasto-list/',
+        item: '',
+
         items: [],
         nome: "",
-        actualItem: {id: null, nome:''},
-        modeLabel: ''
+        tipo_gasto_generico_iri: '',
+        tipo_gasto_generico: null,
+        tipo_gasto_list: [],
+        actualItem: {id: null, nome: '', tipo_gasto_generico: null, tipo_gasto_generico_object: null},
+        showCreateOrUpdateItem: false
       }
     },
     methods: {
+      changeItem(actuala) {
+        console.log(actuala);
+      },
+      clearFieldsForm() {
+        this.nome = '';
+        this.tipo_gasto_generico = null;
+      },
+      lastCharIsBar(an_url) {
 
+        if (an_url != null )
+          return an_url.slice(-1) == '/';
+
+        return false;
+      },
       idFromUrl(an_url) {
-        return parseInt(an_url.split('/').reverse()[0]);
+        if (an_url == null)
+          return -1;
+        //console.log(an_url.slice(-1) == '/');
+        let i =  this.lastCharIsBar(an_url) ? 1:0;
+        return parseInt(an_url.split('/').reverse()[i]);
+      },
+      get_tipo_gasto_generico_object()  {
+        let genericItem = null;
+        if (this.actualItem.tipo_gasto_generico == null)
+          return null;
+        let newid = this.idFromUrl(this.actualItem.tipo_gasto_generico);
+        this.items.forEach(function(anItem){
+            if (anItem.id == newid) {
+                genericItem = anItem;
+                return;
+            }
+
+        });
+        return genericItem;
       },
       plusClicked() {
-        this.nome = '';
-        this.actualItem = {id: null, nome:''};
-        this.modeLabel = 'Pressione enter para incluir um novo item';
+        this.showCreateOrUpdateItem = true;
+        this.actualItem = {id: null, nome: '', tipo_gasto_generico: null };
+      },
+      cancel() {
+        this.showCreateOrUpdateItem = false;
+        this.actualItem = {id: null, nome: '', tipo_gasto_generico: null };
       },
       updateOrCreateItem() {
-        if (this.actualItem.id == null)
-          return this.newItem();
-        this.actualItem.nome = this.nome;
-        axios.put(this.url + this.actualItem.id + "/", this.actualItem).then( response => {
-            if (response.status == 204)
-                this.nome = '';
-        })
-        .catch(error => {
-          console.log(error);
-        });
+        if (this.actualItem.id != null)
+          return this.updateItem();
+        this.createItem();
      },
-      newItem() {
-        if (this.nome == '')
-          return;
-        this.actualItem.nome = this.nome;
+     newActualItem() {
+        return {id: null, nome: '', tipo_gasto_generico: null, tipo_gasto_generico_object: null};
+     },
+      createItem() {
         axios.post(this.url, this.actualItem).then( response => {
             if (response.status == 201) {
-              let i = {};
-              i.id = this.idFromUrl(response.headers['content-location']);
-              i.nome = this.nome;
-              this.items.push(i);
-              this.nome = '';
+              this.actualItem.id = this.idFromUrl(response.headers['content-location']);
+              this.items.push(this.actualItem);
+              this.clearFields();
+              this.actualItem = this.newActualItem();
             }
           })
         .catch(error => {
           console.log(error);
         });
       },
-
+      updateItem() {
+        if (this.actualItem.tipo_gasto_generico == null)
+          return;
+        return  console.log(this.actualItem.tipo_gasto_generico);
+        axios.put(this.url + this.actualItem.id + "/", this.actualItem).then( response => {
+            if (response.status == 204)
+                this.clearFields();
+        })
+        .catch(error => {
+          console.log(error);
+        });
+      },
       editItem(item) {
-          this.modeLabel = 'Ao finalizar a edição, pressione enter para registrar a alteração';
           this.actualItem = item;
-          this.nome = item.nome;
+          this.showCreateOrUpdateItem = true;
+          this.actualItem.tipo_gasto_generico_object = this.get_tipo_gasto_generico_object();
+          //console.log("this.actualItem.tipo_gasto_generico_object:");
+          //console.log(this.get_tipo_gasto_generico_object());
       },
       removeItem(item) {
         let index = this.items.indexOf(item);
@@ -105,14 +155,10 @@ export default {
       },
     },
     created: function () {
-      axios.defaults.baseURL = 'http://127.0.0.1:8000/controle/';
-      axios.defaults.headers.common['Accept'] = 'application/json';
-      axios.defaults.headers.post['Content-Type'] = 'application/json';
       this.url = "tipo-gasto-list/";
-      this.dialog= false;
-      this.modeLabel = 'Digite e pressione enter para incluir um novo item';
       axios.get(this.url).then(response => {
               this.items = response.data;
+              this.tipo_gasto_list = this.items;
 
       })
       .catch(error => {

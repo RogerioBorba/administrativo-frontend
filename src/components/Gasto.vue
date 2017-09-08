@@ -186,9 +186,6 @@
       },
     },
     created: function () {
-      axios.defaults.baseURL = 'http://127.0.0.1:8000/controle/';
-      axios.defaults.headers.common['Accept'] = 'application/json';
-      axios.defaults.headers.post['Content-Type'] = 'application/json';
       this.url = "gasto-list/";
       this.actualItem = {};
       axios.all([this.getAllGastos(), this.getAllTipoGasto()])

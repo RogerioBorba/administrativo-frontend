@@ -45,7 +45,7 @@
     data () {
       return {
 
-        tabs: ['Gastos', 'Tipo de Gasto', 'Pessoas'],
+        tabs: ['Tipo de Gasto','Gastos', 'Pessoas'],
         active: null,
         text: 'inicial'
       }

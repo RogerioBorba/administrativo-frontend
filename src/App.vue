@@ -7,8 +7,8 @@
 
 <script>
 import TabControleGasto from './components/TabControleGasto';
-
 export default {
+
   name: 'app',
   components: {
     'tab-controle-gasto': TabControleGasto,
