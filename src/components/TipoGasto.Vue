@@ -17,9 +17,9 @@
 
         <form  v-if="showCreateOrUpdateItem">
            <v-text-field  label="Nome" v-model="actualItem.nome" ></v-text-field>
-           <v-select label="Tipo de Gasto Genérico" v-model="actualItem.tipo_gasto_generico_object" :items="tipo_gasto_list" item-text="nome" ></v-select>
-           <v-btn @click="updateOrCreateItem">submit</v-btn>
-           <v-btn @click="cancel">Cancel</v-btn>
+           <v-select label="Tipo de Gasto Genérico" v-model="tipo_gasto_generico_object" :items="tipo_gasto_list" item-text="nome" @blur="blurSelectedItem" ></v-select>
+           <v-btn @click="updateOrCreateItem">Confirmar</v-btn>
+           <v-btn @click="cancel">Cancelar</v-btn>
        </form>
         <v-list >
           <v-list-tile avatar v-for="(item, index) in items" :key="index" @click="" v-bind:value="item">
@@ -47,23 +47,25 @@ export default {
       return {
         url: 'tipo-gasto-list/',
         item: '',
-
         items: [],
         nome: "",
+        tipo_gasto_generico_object: null,
         tipo_gasto_generico_iri: '',
         tipo_gasto_generico: null,
         tipo_gasto_list: [],
-        actualItem: {id: null, nome: '', tipo_gasto_generico: null, tipo_gasto_generico_object: null},
+        actualItem: {id: null, nome: '', tipo_gasto_generico: null, tipo_gasto_generico_obj: null},
         showCreateOrUpdateItem: false
       }
     },
     methods: {
-      changeItem(actuala) {
-        console.log(actuala);
+      blurSelectedItem() {
+        console.log(this.tipo_gasto_generico_object);
+        this.actualItem.tipo_gasto_generico_obj = this.tipo_gasto_generico_object;
       },
       clearFieldsForm() {
         this.nome = '';
         this.tipo_gasto_generico = null;
+        this.tipo_gasto_list = this.items.slice();
       },
       lastCharIsBar(an_url) {
 
@@ -96,39 +98,44 @@ export default {
       plusClicked() {
         this.showCreateOrUpdateItem = true;
         this.actualItem = {id: null, nome: '', tipo_gasto_generico: null };
+        this.tipo_gasto_generico_object = null;
       },
       cancel() {
         this.showCreateOrUpdateItem = false;
         this.actualItem = {id: null, nome: '', tipo_gasto_generico: null };
+        this.tipo_gasto_generico_object = null;
       },
       updateOrCreateItem() {
+        if (this.tipo_gasto_generico_object != null)
+          this.actualItem.tipo_gasto_generico = this.url + this.tipo_gasto_generico_object.id;
         if (this.actualItem.id != null)
-          return this.updateItem();
-        this.createItem();
+          this.updateItem();
+        else
+          this.createItem();
+        this.showCreateOrUpdateItem = false;
      },
      newActualItem() {
-        return {id: null, nome: '', tipo_gasto_generico: null, tipo_gasto_generico_object: null};
+        return {id: null, nome: '', tipo_gasto_generico: null, tipo_gasto_generico_obj: null};
      },
       createItem() {
         axios.post(this.url, this.actualItem).then( response => {
             if (response.status == 201) {
               this.actualItem.id = this.idFromUrl(response.headers['content-location']);
               this.items.push(this.actualItem);
-              this.clearFields();
+              this.clearFieldsForm();
               this.actualItem = this.newActualItem();
             }
+            console.log(response.status);
           })
         .catch(error => {
           console.log(error);
         });
       },
       updateItem() {
-        if (this.actualItem.tipo_gasto_generico == null)
-          return;
-        return  console.log(this.actualItem.tipo_gasto_generico);
         axios.put(this.url + this.actualItem.id + "/", this.actualItem).then( response => {
             if (response.status == 204)
-                this.clearFields();
+                this.clearFieldsForm();
+            console.log(response.status);
         })
         .catch(error => {
           console.log(error);
@@ -137,7 +144,8 @@ export default {
       editItem(item) {
           this.actualItem = item;
           this.showCreateOrUpdateItem = true;
-          this.actualItem.tipo_gasto_generico_object = this.get_tipo_gasto_generico_object();
+          this.tipo_gasto_generico_object = this.get_tipo_gasto_generico_object();
+          this.tipo_gasto_list = this.items.filter(tp_gasto=> { return tp_gasto.nome != this.actualItem.nome;});
           //console.log("this.actualItem.tipo_gasto_generico_object:");
           //console.log(this.get_tipo_gasto_generico_object());
       },
@@ -158,8 +166,7 @@ export default {
       this.url = "tipo-gasto-list/";
       axios.get(this.url).then(response => {
               this.items = response.data;
-              this.tipo_gasto_list = this.items;
-
+              this.tipo_gasto_list = this.items.slice();
       })
       .catch(error => {
         console.log(error);
