@@ -1,6 +1,5 @@
 <template>
   <div id="app">
-
     <tab-controle-gasto></tab-controle-gasto>
   </div>
 </template>

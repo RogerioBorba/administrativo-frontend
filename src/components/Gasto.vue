@@ -15,7 +15,19 @@
         </v-toolbar>
         <form  v-if="showCreateOrUpdateItem">
            <v-select label="Tipo de Gasto" v-model="tipo_gasto_object" :items="tipo_gasto_list" item-text="nome" @blur="blurSelectedItem" required></v-select>
-           <v-text-field label="Data" v-model="actualItem.data"  required ></v-text-field>
+           <v-flex xs12 sm6>
+             <v-menu lazy  :close-on-content-click="false"  v-model="menu"  transition="scale-transition" offset-y full-width  :nudge-left="40" max-width="290px">
+               <v-text-field slot="activator" label="Escolha a data no menu" v-model="actualItem.data" prepend-icon="event" readonly ></v-text-field>
+               <v-date-picker v-model="actualItem.data" no-title scrollable actions>
+                 <template scope="{ save, cancel }">
+                   <v-card-actions>
+                     <v-btn flat primary @click.native="cancel()">Cancelar</v-btn>
+                     <v-btn flat primary @click.native="save()">Confirmar</v-btn>
+                   </v-card-actions>
+                 </template>
+               </v-date-picker>
+             </v-menu>
+          </v-flex>
            <v-text-field label="Valor" v-model="actualItem.valor"  required ></v-text-field>
            <v-text-field label="Detalhe" v-model="actualItem.detalhe"  required ></v-text-field>
            <v-btn @click="submit">Confirmar</v-btn>
@@ -68,6 +80,8 @@
         pagination: {
          sortBy: 'valor'
        },
+       menu: false,
+       modal: false,
        selected: [],
        showCreateOrUpdateItem: false,
        data: '',
