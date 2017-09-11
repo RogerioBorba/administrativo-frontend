@@ -7,12 +7,8 @@
           <v-btn icon @click="plusClicked">
              <v-icon >add</v-icon>
           </v-btn>
-          <v-btn icon>
-             <v-icon>search</v-icon>
-          </v-btn>
-          <v-btn icon>
-            <v-icon>more_vert</v-icon>
-          </v-btn>
+          <v-spacer></v-spacer>
+          <v-text-field label="Pesquisar..."  single-line  append-icon="search"  dark ></v-text-field>
         </v-toolbar>
 
         <form  v-if="showCreateOrUpdateItem">
@@ -68,10 +64,8 @@ export default {
         this.tipo_gasto_list = this.items.slice();
       },
       lastCharIsBar(an_url) {
-
         if (an_url != null )
           return an_url.slice(-1) == '/';
-
         return false;
       },
       idFromUrl(an_url) {

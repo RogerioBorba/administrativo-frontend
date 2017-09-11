@@ -14,12 +14,12 @@
           </v-btn>
         </v-toolbar>
         <form  v-if="showCreateOrUpdateItem">
-           <v-select label="Tipo de Gasto" v-model="tipo_gasto" :items="tipo_gasto_list" item-text="nome" required></v-select>
-           <v-text-field label="Data" v-model="data"  required ></v-text-field>
-           <v-text-field label="Valor" v-model="valor"  required ></v-text-field>
-           <v-text-field label="Detalhe" v-model="detalhe"  required ></v-text-field>
-           <v-btn @click="submit">submit</v-btn>
-           <v-btn @click="cancel">Cancel</v-btn>
+           <v-select label="Tipo de Gasto" v-model="tipo_gasto_object" :items="tipo_gasto_list" item-text="nome" @blur="blurSelectedItem" required></v-select>
+           <v-text-field label="Data" v-model="actualItem.data"  required ></v-text-field>
+           <v-text-field label="Valor" v-model="actualItem.valor"  required ></v-text-field>
+           <v-text-field label="Detalhe" v-model="actualItem.detalhe"  required ></v-text-field>
+           <v-btn @click="submit">Confirmar</v-btn>
+           <v-btn @click="cancel">Cancelar</v-btn>
        </form>
         <v-data-table v-model="selected" v-bind:headers="headers" v-bind:items="items"  select-all v-bind:pagination.sync="pagination" selected-key="name" class="elevation-1">
           <template slot="headers" scope="props">
@@ -74,6 +74,7 @@
        valor: '',
        detalhe: '',
        tipo_gasto: '',
+       tipo_gasto_object: '',
        actualItem: {},
         headers: [
           { text: 'Excluir', value: 'excluir'},
@@ -87,6 +88,10 @@
       }
     },
     methods: {
+      blurSelectedItem() {
+        console.log(this.tipo_gasto_object);
+        this.actualItem.tipo_gasto_object = this.tipo_gasto_generico_object;
+      },
       toggleAll () {
         if (this.selected.length) this.selected = [];
         else this.selected = this.items.slice();
@@ -157,7 +162,6 @@
       },
       editItem(item) {
           this.actualItem = item;
-          this.populateFields();
           this.showCreateOrUpdateItem = true;
       },
       removeItem(item) {
