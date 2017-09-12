@@ -30,8 +30,8 @@
           </v-flex>
            <v-text-field label="Valor" v-model="actualItem.valor"  required ></v-text-field>
            <v-text-field label="Detalhe" v-model="actualItem.detalhe"  required ></v-text-field>
-           <v-btn @click="submit">Confirmar</v-btn>
-           <v-btn @click="cancel">Cancelar</v-btn>
+           <v-btn @click="updateOrCreateItem">Confirmar</v-btn>
+           <v-btn @click="cancelarItem">Cancelar</v-btn>
        </form>
         <v-data-table v-model="selected" v-bind:headers="headers" v-bind:items="items"  select-all v-bind:pagination.sync="pagination" selected-key="name" class="elevation-1">
           <template slot="headers" scope="props">
@@ -80,14 +80,12 @@
         pagination: {
          sortBy: 'valor'
        },
+       url: '',
+       tipo_gasto_list_url: '',
        menu: false,
        modal: false,
        selected: [],
        showCreateOrUpdateItem: false,
-       data: '',
-       valor: '',
-       detalhe: '',
-       tipo_gasto: '',
        tipo_gasto_object: '',
        actualItem: {},
         headers: [
@@ -104,7 +102,7 @@
     methods: {
       blurSelectedItem() {
         console.log(this.tipo_gasto_object);
-        this.actualItem.tipo_gasto_object = this.tipo_gasto_generico_object;
+        this.actualItem.tipo_gasto = axios.defaults.baseURL + this.tipo_gasto_list_url + this.tipo_gasto_object.id;
       },
       toggleAll () {
         if (this.selected.length) this.selected = [];
@@ -118,45 +116,41 @@
           this.pagination.descending = false;
         }
       },
+      get_tipo_gasto_object()  {
+        let tp_gasto = null;
+        if (this.actualItem.tipo_gasto == null)
+          return null;
+        let newid = this.idFromUrl(this.actualItem.tipo_gasto);
+        this.tipo_gasto_list.forEach(anItem=>{
+            if (anItem.id == newid) {
+              tp_gasto = anItem;
+              return tp_gasto;
+            }
+        });
+        return tp_gasto;
+      },
       idFromUrl(an_url) {
         return parseInt(an_url.split('/').reverse()[0]);
       },
       plusClicked() {
         this.showCreateOrUpdateItem = true;
-
       },
       clearFields() {
-        this.tipo_gasto = null;
-        this.valor = '';
-        this.data = '';
-        this.detalhe = '';
+        this.actualItem ={id: null, tipo_gasto: null, valor: null, data: null, detalhe: ''};
       },
-      populateFields() {
-        this.tipo_gasto = this.actualItem.tipo_gasto
-        this.valor = this.actualItem.valor;
-        this.data = this.actualItem.data;
-        this.detalhe = this.actualItem.detalhe;
-      },
-      populateItem() {
-        this.actualItem.tipo_gasto = this.tipo_gasto.id;
-        this.actualItem.valor = this.valor;
-        this.actualItem.data = this.data;
-        this.actualItem.detalhe = this.detalhe;
-      },
-      updateOrNewItem() {
+      updateOrCreateItem() {
         if (this.actualItem.id != null)
           return this.updateItem();
-        this.newItem();
+        this.createItem();
      },
-      newItem() {
-        this.actualItem = {};
-        this.populateItem();
+      createItem() {
         axios.post(this.url, this.actualItem).then( response => {
             if (response.status == 201) {
               this.actualItem.id = this.idFromUrl(response.headers['content-location']);
               this.items.push(this.actualItem);
               this.clearFields();
               this.actualItem = {};
+              this.showCreateOrUpdateItem = false;
             }
           })
         .catch(error => {
@@ -164,11 +158,11 @@
         });
       },
       updateItem() {
-        this.tipo_gasto = this.actualItem.tipo_gasto;
-        this.populateItem();
+        this.actualItem.tipo_gasto = this.tipo_gasto_list_url + this.tipo_gasto_object.id +'/';
         axios.put(this.url + this.actualItem.id + "/", this.actualItem).then( response => {
             if (response.status == 204)
                 this.clearFields();
+                this.showCreateOrUpdateItem = false;
         })
         .catch(error => {
           console.log(error);
@@ -177,6 +171,9 @@
       editItem(item) {
           this.actualItem = item;
           this.showCreateOrUpdateItem = true;
+          this.tipo_gasto_object = this.get_tipo_gasto_object();
+          console.log(this.tipo_gasto_object);
+
       },
       removeItem(item) {
         let index = this.items.indexOf(item);
@@ -189,22 +186,25 @@
           console.log(error);
         });
       },
-      submit() {
-        this.updateOrNewItem();
+      salvarItem() {
+        this.updateOrCreateItem();
+        this.showCreateOrUpdateItem = false;
+        this.actualItem = {};
       },
-      cancel() {
+      cancelarItem() {
         this.actualItem = {};
         this.showCreateOrUpdateItem = false;
       },
       getAllGastos() {
-        return axios.get("gasto-list/");
+        return axios.get(this.url);
       },
       getAllTipoGasto() {
-        return axios.get("tipo-gasto-list/");
+        return axios.get(this.tipo_gasto_list_url);
       },
     },
     created: function () {
       this.url = "gasto-list/";
+      this.tipo_gasto_list_url = "tipo-gasto-list/";
       this.actualItem = {};
       axios.all([this.getAllGastos(), this.getAllTipoGasto()])
         .then(axios.spread((response_gastos, response_tipos)=> {
