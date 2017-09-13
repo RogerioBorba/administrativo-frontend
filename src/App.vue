@@ -6,6 +6,9 @@
 
 <script>
 import TabControleGasto from './components/TabControleGasto';
+import {config} from './components/config';
+
+console.log(config.id);
 export default {
 
   name: 'app',

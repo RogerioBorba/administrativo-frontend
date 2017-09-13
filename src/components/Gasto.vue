@@ -16,20 +16,15 @@
         <form  v-if="showCreateOrUpdateItem">
            <v-select label="Tipo de Gasto" v-model="tipo_gasto_object" :items="tipo_gasto_list" item-text="nome" @blur="blurSelectedItem" required></v-select>
            <v-flex xs12 sm6>
-             <v-menu lazy  :close-on-content-click="false"  v-model="menu"  transition="scale-transition" offset-y full-width  :nudge-left="40" max-width="290px">
-               <v-text-field slot="activator" label="Escolha a data no menu" v-model="actualItem.data" prepend-icon="event" readonly ></v-text-field>
-               <v-date-picker v-model="actualItem.data" no-title scrollable actions>
-                 <template scope="{ save, cancel }">
-                   <v-card-actions>
-                     <v-btn flat primary @click.native="cancel()">Cancelar</v-btn>
-                     <v-btn flat primary @click.native="save()">Confirmar</v-btn>
-                   </v-card-actions>
-                 </template>
+             <v-menu lazy  :close-on-content-click="true"  v-model="menu"  transition="scale-transition" offset-y full-width  :nudge-left="40" max-width="290px">
+               <v-text-field slot="activator" label="Escolha a data no menu" v-model="uma_data" prepend-icon="event" readonly ></v-text-field>
+               <v-date-picker v-model="uma_data" no-title scrollable actions>
+
                </v-date-picker>
              </v-menu>
           </v-flex>
-           <v-text-field label="Valor" v-model="actualItem.valor"  required ></v-text-field>
-           <v-text-field label="Detalhe" v-model="actualItem.detalhe"  required ></v-text-field>
+           <v-text-field label="Valor" v-model="um_valor"  required ></v-text-field>
+           <v-text-field label="Detalhe" v-model="um_detalhe"  required ></v-text-field>
            <v-btn @click="updateOrCreateItem">Confirmar</v-btn>
            <v-btn @click="cancelarItem">Cancelar</v-btn>
        </form>
@@ -60,7 +55,7 @@
                    <v-icon dark> edit </v-icon>
                 </v-btn>
               </td>
-              <td class="text-xs-right">{{ props.item.tipo_gasto }}</td>
+              <td class="text-xs-right">{{ tipo_gasto_description(props.item.tipo_gasto) }}</td>
               <td class="text-xs-right">{{ props.item.data }}</td>
               <td class="text-xs-right">{{ props.item.valor }}</td>
               <td class="text-xs-right">{{ props.item.usuario }}</td>
@@ -81,6 +76,9 @@
          sortBy: 'valor'
        },
        url: '',
+       uma_data: null,
+       um_valor: null,
+       um_detalhe: null,
        tipo_gasto_list_url: '',
        menu: false,
        modal: false,
@@ -116,6 +114,19 @@
           this.pagination.descending = false;
         }
       },
+      tipo_gasto_description(a_tipo_gasto) {
+        console.log(a_tipo_gasto);
+        let newid = this.idFromUrl(a_tipo_gasto);
+        let description = null;
+        this.tipo_gasto_list.forEach(anItem=>{
+            if (anItem.id == newid) {
+                description = anItem.nome;
+                return anItem.nome;
+
+            }
+        });
+        return description;
+      },
       get_tipo_gasto_object()  {
         let tp_gasto = null;
         if (this.actualItem.tipo_gasto == null)
@@ -133,12 +144,30 @@
         return parseInt(an_url.split('/').reverse()[0]);
       },
       plusClicked() {
+        this.clearFormFields();
         this.showCreateOrUpdateItem = true;
       },
-      clearFields() {
-        this.actualItem ={id: null, tipo_gasto: null, valor: null, data: null, detalhe: ''};
+      clearFormFields() {
+        this.uma_data = null;
+        this.um_valor = null;
+        this.um_detalhe = null;
+        this.tipo_gasto_object = null;
+      },
+      populateActualItem() {
+        //this.tipo_gasto_object = this.get_tipo_gasto_object();
+        this.actualItem.data = this.uma_data;
+        this.actualItem.valor = this.um_valor;
+        this.actualItem.tipo_gasto = axios.defaults.baseURL + this.tipo_gasto_list_url + this.tipo_gasto_object.id;
+        this.actualItem.detalhe = this.um_detalhe;
+      },
+      populateFormWithActualItem() {
+        this.uma_data = this.actualItem.data;
+        this.um_valor = this.actualItem.valor;
+        this.tipo_gasto_object = this.get_tipo_gasto_object();
+        this.um_detalhe = this.actualItem.detalhe;
       },
       updateOrCreateItem() {
+        this.populateActualItem();
         if (this.actualItem.id != null)
           return this.updateItem();
         this.createItem();
@@ -148,7 +177,7 @@
             if (response.status == 201) {
               this.actualItem.id = this.idFromUrl(response.headers['content-location']);
               this.items.push(this.actualItem);
-              this.clearFields();
+              this.clearFormFields();
               this.actualItem = {};
               this.showCreateOrUpdateItem = false;
             }
@@ -158,10 +187,10 @@
         });
       },
       updateItem() {
-        this.actualItem.tipo_gasto = this.tipo_gasto_list_url + this.tipo_gasto_object.id +'/';
+        //this.actualItem.tipo_gasto = this.tipo_gasto_list_url + this.tipo_gasto_object.id +'/';
         axios.put(this.url + this.actualItem.id + "/", this.actualItem).then( response => {
             if (response.status == 204)
-                this.clearFields();
+                this.clearFormFields();
                 this.showCreateOrUpdateItem = false;
         })
         .catch(error => {
@@ -170,8 +199,9 @@
       },
       editItem(item) {
           this.actualItem = item;
+          this.populateFormWithActualItem();
           this.showCreateOrUpdateItem = true;
-          this.tipo_gasto_object = this.get_tipo_gasto_object();
+          //this.tipo_gasto_object = this.get_tipo_gasto_object();
           console.log(this.tipo_gasto_object);
 
       },

@@ -37,6 +37,8 @@
 </template>
 <script>
 import axios from 'axios';
+import {config} from './config';
+
 export default {
   name: 'TipoGasto',
   data () {
@@ -157,10 +159,14 @@ export default {
       },
     },
     created: function () {
+
       this.url = "tipo-gasto-list/";
       axios.get(this.url).then(response => {
+              
               this.items = response.data;
+              config.tipo_gasto_object_list = this.items;
               this.tipo_gasto_list = this.items.slice();
+
       })
       .catch(error => {
         console.log(error);
