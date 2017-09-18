@@ -19,7 +19,8 @@
           </v-flex>
           <template v-if="showRegistrar">
             <v-flex xs8>
-              <v-text-field name="input-10-2" label="Informe a senha novamente" v-model="pessoa.senha_novamente"  append-icon="visibility_off" type="password"  class="input-group--focused" ></v-text-field>
+              <v-text-field name="input-10-2" label="Informe a senha novamente" v-model="pessoa.senha_novamente"  append-icon="visibility_off" type="password"  class="input-group--focused @blur="blurNewPassword" ></v-text-field>
+              <p v-show="isNewpasswordNotEqualpassword">As senhas informadas não são idênticas</p>
             </v-flex>
           </template >
           <v-checkbox label="Registre-se" v-model="showRegistrar" ></v-checkbox>
@@ -38,27 +39,48 @@ import {config} from './config';
     name: 'PessoaForm',
     data () {
         return {
-          pessoa: { nome: null, nome_usuario: null, email: null, password: null, new_password: null, data_nascimento: null, senha: null, senha_novamente: null},
+          pessoa: { nome: null, nome_usuario: null, email: null, password: null, new_password: null, data_nascimento: null, senha: null, senha_novamente: null, avatar: null},
           showRegistrar: false,
           menu: false,
           modal: false,
+          isNewpasswordNotEqualpassword: false,
         }
     },
     methods: {
+      blurNewPassword() {
+        if (this.pessoa.new_password==this.pessoa.password)
+          this.isNewpasswordNotEqualpassword = false;
+        else
+          this.isNewpasswordNotEqualpassword = true;
+      },
+      lastCharIsBar(an_url) {
+        if (an_url != null )
+          return an_url.slice(-1) == '/';
+        return false;
+      },
+      idFromUrl(an_url) {
+        if (an_url == null)
+          return -1;
+        //console.log(an_url.slice(-1) == '/');
+        let i =  this.lastCharIsBar(an_url) ? 1:0;
+        return parseInt(an_url.split('/').reverse()[i]);
+      },
       loginOrRegister() {
         let url = '';
-        if (this.showRegistrar)
-          url = 'usuario-list/registro/'
-        else
+        if (this.showRegistrar) {
+          url = 'usuario-list/registro/';
+          if  (!(this.pessoa.password.length > 0 && this.pessoa.password == this.pessoa.new_password)) {
+            this.isNewpasswordNotEqualpassword = true;
+            return;
+          }
+        } else
           url = 'usuario-list/login/'
         axios.post(url, this.pessoa).then( response => {
             if (response.status == 201) {
               console.log(response.headers['content-location']);
               console.log(response.headers['x-access-token']);
               this.pessoa.id = this.idFromUrl(response.headers['content-location']);
-              this.items.push(this.actualItem);
-              this.clearFieldsForm();
-              this.actualItem = this.newActualItem();
+
             }
             console.log(response.status);
           })
