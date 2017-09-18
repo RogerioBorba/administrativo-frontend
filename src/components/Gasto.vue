@@ -13,7 +13,7 @@
             <v-icon>more_vert</v-icon>
           </v-btn>
         </v-toolbar>
-        <form  v-if="showCreateOrUpdateItem">
+        <form  v-show="showCreateOrUpdateItem">
            <v-select label="Tipo de Gasto" v-model="tipo_gasto_object" :items="tipo_gasto_list" item-text="nome" @blur="blurSelectedItem" required></v-select>
            <v-flex xs12 sm6>
              <v-menu lazy  :close-on-content-click="true"  v-model="menu"  transition="scale-transition" offset-y full-width  :nudge-left="40" max-width="290px">
@@ -68,6 +68,7 @@
 </template>
 <script>
   import axios from 'axios';
+  import {config} from './config';
   export default {
     name: 'Gasto',
     data () {
@@ -85,6 +86,7 @@
        selected: [],
        showCreateOrUpdateItem: false,
        tipo_gasto_object: '',
+       tipo_gasto_list: [],
        actualItem: {},
         headers: [
           { text: 'Excluir', value: 'excluir'},
@@ -231,6 +233,16 @@
       getAllTipoGasto() {
         return axios.get(this.tipo_gasto_list_url);
       },
+      firstDateOfMonth() {
+        let  date = new Date();
+        let firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        return firstDay;
+      },
+      lastDateOfMonth() {
+        let  date = new Date();
+        let lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+        return lastDay;
+      }
     },
     created: function () {
       this.url = "gasto-list/";
@@ -239,7 +251,7 @@
       axios.all([this.getAllGastos(), this.getAllTipoGasto()])
         .then(axios.spread((response_gastos, response_tipos)=> {
           this.items = response_gastos.data;
-          this.tipo_gasto_list = response_tipos.data;
+          this.tipo_gasto_list = config.tipo_gasto_object_list;
         }))
         .catch(error => {
           console.log(error);

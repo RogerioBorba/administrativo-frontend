@@ -11,7 +11,7 @@
           <v-text-field label="Pesquisar..."  single-line  append-icon="search"  dark ></v-text-field>
         </v-toolbar>
 
-        <form  v-if="showCreateOrUpdateItem">
+        <form  v-show="showCreateOrUpdateItem">
            <v-text-field  label="Nome" v-model="actualItem.nome" ></v-text-field>
            <v-select label="Tipo de Gasto Genérico" v-model="tipo_gasto_generico_object" :items="tipo_gasto_list" item-text="nome" @blur="blurSelectedItem" ></v-select>
            <v-btn @click="updateOrCreateItem">Confirmar</v-btn>
@@ -162,7 +162,7 @@ export default {
 
       this.url = "tipo-gasto-list/";
       axios.get(this.url).then(response => {
-              
+              console.log(config.id);
               this.items = response.data;
               config.tipo_gasto_object_list = this.items;
               this.tipo_gasto_list = this.items.slice();

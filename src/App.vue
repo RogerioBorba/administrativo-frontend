@@ -5,15 +5,13 @@
 </template>
 
 <script>
-import TabControleGasto from './components/TabControleGasto';
+import DrawerControleGasto from './components/DrawerControleGasto';
 import {config} from './components/config';
 
-console.log(config.id);
 export default {
-
   name: 'app',
   components: {
-    'tab-controle-gasto': TabControleGasto,
+    'tab-controle-gasto': DrawerControleGasto,
   }
 }
 </script>
