@@ -5,7 +5,7 @@
         <v-flex xs12 md6 offset-md3>
           <v-card>
             <v-toolbar class="indigo" dark>
-            <v-toolbar-title>Usuário</v-toolbar-title>
+            <v-toolbar-title>{{title}}</v-toolbar-title>
           </v-toolbar>
         <form>
           <template v-if="showRegistrar">
@@ -54,6 +54,7 @@ import {config} from './config';
           showRegistrar: false,
           menu: false,
           modal: false,
+          title: 'Login/Registro',
           isNewpasswordNotEqualpassword: false,
           rules: {
             required: (value) => !!value || 'Required.',
@@ -96,18 +97,27 @@ import {config} from './config';
           url = 'usuario-list/login/';
 
         axios.post(url, this.pessoa).then( response => {
+          this.title= 'Login/Registro';
             if (response.status == 201) {
               this.pessoa.id = this.idFromUrl(response.headers['content-location']);
+              config.localstore.set('token', response.headers['x-access-token']);
+
             }
+            this.$emit('loginOrRegister', response.status);
             console.log(response.status);
             this.showRegistrar = false;
           })
         .catch(error => {
+          this.title= 'Login ou senha incorreta';
           console.log(error);
+          this.$emit('loginOrRegister', error);
         });
 
       },
-      cancel(){this.pessoa= { nome: '', nome_usuario: '', email: null, password: null, new_password: null, data_nascimento: null,  avatar: null}}
+      cancel(){
+       this.pessoa= { nome: '', nome_usuario: '', email: null, password: null, new_password: null, data_nascimento: null,  avatar: null}
+       this.$emit('cancelLogin');
+     }
     }
   }
 </script>
