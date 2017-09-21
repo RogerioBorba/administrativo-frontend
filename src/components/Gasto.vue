@@ -7,11 +7,25 @@
              <v-icon >add</v-icon>
           </v-btn>
           <v-btn icon>
-             <v-icon>search</v-icon>
-          </v-btn>
-          <v-btn icon>
             <v-icon>more_vert</v-icon>
           </v-btn>
+          <v-flex xs12 sm6>
+            <v-menu lazy  :close-on-content-click="true"  v-model="menu_data_inicial"  transition="scale-transition" offset-y full-width  :nudge-left="40" max-width="290px">
+              <v-text-field slot="activator" label="Data inicial de pesquisa" v-model="data_inicial" prepend-icon="event" readonly ></v-text-field>
+              <v-date-picker v-model="data_inicial" no-title scrollable actions>
+              </v-date-picker>
+            </v-menu>
+         </v-flex>
+         <v-flex xs12 sm6>
+           <v-menu lazy  :close-on-content-click="true"  v-model="menu_data_final"  transition="scale-transition" offset-y full-width  :nudge-left="40" max-width="290px">
+             <v-text-field slot="activator" label="Data final de pesquisa" v-model="data_final" prepend-icon="event" readonly ></v-text-field>
+             <v-date-picker v-model="data_final" no-title scrollable actions>
+             </v-date-picker>
+           </v-menu>
+        </v-flex>
+        <v-btn icon @click="searchGastoBetweenDatesClicked">
+           <v-icon>search</v-icon>
+        </v-btn>
         </v-toolbar>
         <form  v-show="showCreateOrUpdateItem">
            <v-select label="Tipo de Gasto" v-model="tipo_gasto_object" :items="tipo_gasto_list" item-text="nome" @blur="blurSelectedItem" required></v-select>
@@ -19,7 +33,6 @@
              <v-menu lazy  :close-on-content-click="true"  v-model="menu"  transition="scale-transition" offset-y full-width  :nudge-left="40" max-width="290px">
                <v-text-field slot="activator" label="Escolha a data no menu" v-model="uma_data" prepend-icon="event" readonly ></v-text-field>
                <v-date-picker v-model="uma_data" no-title scrollable actions>
-
                </v-date-picker>
              </v-menu>
           </v-flex>
@@ -69,8 +82,12 @@
 <script>
   import axios from 'axios';
   import {config} from './config';
+  import DatePicker from './DatePicker';
   export default {
     name: 'Gasto',
+    components: {
+      'app-datepicker': DatePicker,
+    },
     data () {
       return {
         pagination: {
@@ -81,6 +98,10 @@
        um_valor: null,
        um_detalhe: null,
        tipo_gasto_list_url: '',
+       menu_data_inicial: false,
+       data_inicial: null,
+       menu_data_final: false,
+       data_final: null,
        menu: false,
        modal: false,
        selected: [],
@@ -101,7 +122,7 @@
     },
     methods: {
       blurSelectedItem() {
-        console.log(this.tipo_gasto_object);
+        //console.log(this.tipo_gasto_object);
         this.actualItem.tipo_gasto = axios.defaults.baseURL + this.tipo_gasto_list_url + this.tipo_gasto_object.id;
       },
       toggleAll () {
@@ -117,7 +138,7 @@
         }
       },
       tipo_gasto_description(a_tipo_gasto) {
-        console.log(a_tipo_gasto);
+        //console.log(a_tipo_gasto);
         let newid = this.idFromUrl(a_tipo_gasto);
         let description = null;
         this.tipo_gasto_list.forEach(anItem=>{
@@ -204,7 +225,7 @@
           this.populateFormWithActualItem();
           this.showCreateOrUpdateItem = true;
           //this.tipo_gasto_object = this.get_tipo_gasto_object();
-          console.log(this.tipo_gasto_object);
+          //console.log(this.tipo_gasto_object);
 
       },
       removeItem(item) {
@@ -230,25 +251,49 @@
       getAllGastos() {
         return axios.get(this.url);
       },
+      getAllGastosBetweenDates() {
+        let filter= 'filter/data/between/' + this.data_inicial + '&' + this.data_final + '/';
+        console.log(this.url + filter);
+        return axios.get(this.url + filter);
+      },
       getAllTipoGasto() {
         return axios.get(this.tipo_gasto_list_url);
       },
       firstDateOfMonth() {
         let  date = new Date();
         let firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-        return firstDay;
+        return this.formatDate(firstDay);
       },
       lastDateOfMonth() {
         let  date = new Date();
         let lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-        return lastDay;
+        return this.formatDate(lastDay);
+      },
+      formatDate(a_date) {
+          let newDate = new Date(a_date),
+              year = newDate.getFullYear(),
+              month = '' + (newDate.getMonth() + 1),
+              day = '' + newDate.getDate();
+          if (month.length < 2) month = '0' + month;
+          if (day.length < 2) day = '0' + day;
+          return [year, month, day].join('-');
+      },
+      searchGastoBetweenDatesClicked() {
+          this.getAllGastosBetweenDates().then(response => {
+              this.items = response.data;
+          })
+          .catch(error => {
+            console.log(error);
+          });
       }
     },
     created: function () {
       this.url = "gasto-list/";
       this.tipo_gasto_list_url = "tipo-gasto-list/";
       this.actualItem = {};
-      axios.all([this.getAllGastos(), this.getAllTipoGasto()])
+      this.data_inicial = this.firstDateOfMonth();
+      this.data_final = this.lastDateOfMonth();
+      axios.all([this.getAllGastosBetweenDates(), this.getAllTipoGasto()])
         .then(axios.spread((response_gastos, response_tipos)=> {
           this.items = response_gastos.data;
           this.tipo_gasto_list = config.tipo_gasto_object_list;

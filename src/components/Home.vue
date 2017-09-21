@@ -13,17 +13,6 @@
 import {config} from './config';
 export default {
   name: 'Home',
-   props: ['showMessage'],
-  data () {
-      return {
-      
-      }
-  },
-  created: function() {
-    this.showMessage = config.localstore.get('token') == null;
-    console.log(config.localstore.get('token'));
-
-
-  }
+  props: ['showMessage'],
 }
 </script>

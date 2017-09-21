@@ -32,7 +32,7 @@
     <main>
       <v-container fluid>
         <!--v-router-->
-        <tab-home showMessage="showLoginOrRegistrar" v-show="items[0].show"></tab-home>
+        <tab-home :showMessage="showLoginOrRegistrar" v-show="items[0].show"></tab-home>
         <tab-tipo-gasto v-show="items[1].show"></tab-tipo-gasto>
         <tab-gasto v-show="items[2].show"></tab-gasto>
         <tab-pessoa v-show="showLogin" v-on:cancelLogin="cancelLoginClicked" v-on:loginOrRegister="loginOrRegisterClicked"></tab-pessoa>
