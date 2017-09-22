@@ -44,7 +44,7 @@
 </template>
 <script>
 import axios from 'axios';
-import {config} from './config';
+import {config, Base} from './config';
   export default {
     name: 'PessoaForm',
     data () {
@@ -95,7 +95,8 @@ import {config} from './config';
           }
         } else
           url = 'usuario-list/login/';
-
+        this.pessoa.senha = Base.encode(this.pessoa.senha);
+        this.pessoa.senha_novamente = Base.encode(this.pessoa.senha_novamente);
         axios.post(url, this.pessoa).then( response => {
           this.title= 'Login/Registro';
             if (response.status == 201) {

@@ -4,27 +4,29 @@
       <v-flex sm12>
         <v-toolbar class="indigo text--lighten-2" dark>
           <v-btn icon @click="plusClicked">
-             <v-icon >add</v-icon>
+             <v-icon class="black--text" >add</v-icon>
           </v-btn>
-          <v-btn icon>
+          <v-btn icon class="black--text" >
             <v-icon>more_vert</v-icon>
           </v-btn>
-          <v-flex xs12 sm6>
+
+          <v-flex xs12 sm6 >
             <v-menu lazy  :close-on-content-click="true"  v-model="menu_data_inicial"  transition="scale-transition" offset-y full-width  :nudge-left="40" max-width="290px">
               <v-text-field slot="activator" label="Data inicial de pesquisa" v-model="data_inicial" prepend-icon="event" readonly ></v-text-field>
-              <v-date-picker v-model="data_inicial" no-title scrollable actions>
+              <v-date-picker  v-model="data_inicial" no-title scrollable actions>
               </v-date-picker>
             </v-menu>
          </v-flex>
-         <v-flex xs12 sm6>
-           <v-menu lazy  :close-on-content-click="true"  v-model="menu_data_final"  transition="scale-transition" offset-y full-width  :nudge-left="40" max-width="290px">
+
+         <v-flex xs12 sm6 class="white--text">
+           <v-menu lazy    :close-on-content-click="true"  v-model="menu_data_final"  transition="scale-transition" offset-y full-width  :nudge-left="40" max-width="290px">
              <v-text-field slot="activator" label="Data final de pesquisa" v-model="data_final" prepend-icon="event" readonly ></v-text-field>
              <v-date-picker v-model="data_final" no-title scrollable actions>
              </v-date-picker>
            </v-menu>
         </v-flex>
         <v-btn icon @click="searchGastoBetweenDatesClicked">
-           <v-icon>search</v-icon>
+           <v-icon class="black--text" >search</v-icon>
         </v-btn>
         </v-toolbar>
         <form  v-show="showCreateOrUpdateItem">
