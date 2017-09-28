@@ -12,7 +12,7 @@ axios.defaults.headers.post['Content-Type'] = 'application/json';
 
 Vue.use(Vuetify);
 Vue.use(VueLocalStorage);
-//Vue.localStorage.set('token', null);
+Vue.localStorage.set('token', '');
 console.log(Vue.localStorage);
 config.localstore = Vue.localStorage;
 Vue.config.productionTip = false;

@@ -33,9 +33,9 @@
       <v-container fluid>
         <!--v-router-->
         <tab-home :showMessage="showLoginOrRegistrar" v-show="items[0].show"></tab-home>
-        <tab-tipo-gasto v-show="items[1].show"></tab-tipo-gasto>
-        <tab-gasto v-show="items[2].show"></tab-gasto>
-        <tab-pessoa v-show="showLogin" v-on:cancelLogin="cancelLoginClicked" v-on:loginOrRegister="loginOrRegisterClicked"></tab-pessoa>
+        <tab-tipo-gasto v-if="items[1].show"></tab-tipo-gasto>
+        <tab-gasto v-if="items[2].show"></tab-gasto>
+        <tab-pessoa v-if="showLogin" v-on:cancelLogin="cancelLoginClicked" v-on:loginOrRegister="loginOrRegisterClicked"></tab-pessoa>
 
       </v-container>
 
@@ -66,7 +66,7 @@ import Home from './Home';
         items: [],
         user_actions: [],
         showLogin: false,
-        showLoginOrRegistrar: false,
+        showLoginOrRegistrar: true,
       }
     },
     methods: {
@@ -80,6 +80,7 @@ import Home from './Home';
         });
       },
       selectedItem(an_item) {
+        console.log(config.localstore.get('token'));
         if (config.localstore.get('token') == null)
           return console.log('É preciso estar logado');
         this.actualItem = an_item;
@@ -105,21 +106,22 @@ import Home from './Home';
         this.showLoginOrRegistrar = true;
       },
       loginOrRegisterClicked(status) {
-        //console.log(status);
+        console.log(status);
         this.showLoginOrRegistrar = true;
         if (config.localstore.get('token') != null) {
           this.showLoginOrRegistrar = false;
           this.actualItem =this.items[0];
           this.showSelectedItem();
         }
-
       }
     },
     created: function () {
       this.items = [ { title: 'Controle de gasto', icon: 'home', show: true }, { title: 'Tipo de Gasto', icon: 'note_add', show: false },
         { title: 'Gasto', icon: 'money', show: false }];
       this.actualItem = this.items[0];
-      this.user_actions = [{title: 'Login', action: this.login}, {title: 'Logout', action: this.logout}, { title: 'Configurações', action: this.configuracoes} ]
+      this.user_actions = [{title: 'Login', action: this.login}, {title: 'Logout', action: this.logout}, { title: 'Configurações', action: this.configuracoes} ];
+      config.localstore.remove('token');
+      this.showLoginOrRegistrar= config.localstore.get('token') == null;
     }
   }
 </script>
