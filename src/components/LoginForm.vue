@@ -9,9 +9,9 @@
           </v-toolbar>
         <form>
           <template v-if="showRegistrar">
-            <v-text-field  label="Nome" class="mt-5" v-model="pessoa.nome"   required ></v-text-field>
+            <v-text-field  label="Nome" class="mt-5" v-model="pessoa.nome" :rules="nomeRules"  required ></v-text-field>
           </template>
-           <v-text-field  label="Nome do usuário" v-model="pessoa.nome_usuario"  required ></v-text-field>
+           <v-text-field  label="Nome do usuário" v-model="pessoa.nome_usuario" :rules="nomeRules" required ></v-text-field>
            <template v-if="showRegistrar">
              <v-flex xs12>
                 <v-text-field label="E-mail" v-model="pessoa.email" :rules="[rules.required, rules.email]"></v-text-field>
@@ -23,7 +23,7 @@
              </v-menu>
           </template>
           <v-flex xs8>
-            <v-text-field name="input-10-2" label="Informe a senha" v-model="pessoa.senha" hint="No mínimo 8 caracteres"  min="8"  append-icon="visibility_off" type="password"  class="input-group--focused"  :rules="[() => pessoa.senha > 0 || 'Campo obrigatório']" required></v-text-field>
+            <v-text-field name="input-10-2" label="Informe a senha" v-model="pessoa.senha" hint="No mínimo 8 caracteres"  min="8"  append-icon="visibility_off" type="password"  class="input-group--focused"  :rules="senhaRules" required></v-text-field>
           </v-flex>
           <template v-if="showRegistrar">
             <v-flex xs8>
@@ -56,6 +56,14 @@ import {config, Base} from './config';
           modal: false,
           title: 'Login/Registro',
           isNewpasswordNotEqualpassword: false,
+          nomeRules: [
+            (v) => !!v || 'Nome é obrigatório',
+            (v) => v.length > 1 || 'Nome precisar ser ter mais de um character'
+          ],
+          senhaRules:[
+            (v) => !!v || 'Senha é obrigatória',
+            (v) => v.length > 1 || 'No mínimo 8 caracteres'
+          ],
           rules: {
             required: (value) => !!value || 'Required.',
             email: (value) => {
